@@ -7,6 +7,7 @@ import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
+import {useCallback, useState} from "react";
 
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -20,11 +21,20 @@ const Item = styled(Paper)(({ theme }) => ({
 
 export default function Perfsnap() {
   const [data, setData] = React.useState([]);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
 
-  React.useEffect(() => {
+  const fetchData = useCallback(() => {
     fetch('/api/Portfolio')
       .then(response => response.json())
       .then(data => setData(data));
+    setLastUpdate(new Date());
+  });
+
+  React.useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 20000); // Refresh data every minute
+
+    return () => clearInterval(interval);
   }, []);
 
   const totalValue = data.reduce((acc, row) => acc + parseFloat(Math.abs(row.posn_val)) + parseFloat(row.avl_cash), 0);
@@ -65,6 +75,11 @@ export default function Perfsnap() {
           <Item>Positions : ${positions}</Item>
         </Stack>
 
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Typography variant="caption" display="block" gutterBottom>
+            Last updated: {lastUpdate.toLocaleString()}
+          </Typography>
       </Box>
     </Card>
   );

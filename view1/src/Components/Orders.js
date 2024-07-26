@@ -6,8 +6,10 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Title from './Title';
-import { useState, useEffect } from 'react';
+import {useState, useEffect, useCallback} from 'react';
 import {fetchPortfolio} from "./pullData";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 // Generate Order Data
 function createData(stock, posn, daysgain, posn_size) {
   return {
@@ -25,16 +27,24 @@ function preventDefault(event) {
 
 export default function Orders() {
   const [rows, setRows] = useState([]);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
 
-  useEffect(() => {
-
+  const fetchData = useCallback(() => {
     fetchPortfolio().then(data => {
       if (data) {
         const newRows = data.map(item => createData(item.stock, item.posn_norm, item.days_gain_val, item.posn_val));
         setRows(newRows);
       }
+
     });
+    setLastUpdate(new Date());
+  });
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Refresh data every minute
+    return () => clearInterval(interval);
   }, []);
+
   return (
     <React.Fragment>
       <Title>Current Portfolio</Title>
@@ -58,6 +68,11 @@ export default function Orders() {
           ))}
         </TableBody>
       </Table>
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Typography variant="caption" display="block" gutterBottom>
+            Last updated: {lastUpdate.toLocaleString()}
+          </Typography>
+      </Box>
       <Link color="primary" href="#" onClick={preventDefault} sx={{ mt: 3 }}>
         Full Portfolio
       </Link>

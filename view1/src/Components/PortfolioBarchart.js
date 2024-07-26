@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import Stack from '@mui/material/Stack';
@@ -8,6 +8,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
 import {fetchPortfolio} from "./pullData";
+import Box from "@mui/material/Box";
 
 
 function createData(stock, posn_size) {
@@ -22,18 +23,25 @@ function createData(stock, posn_size) {
 
 export default function PortfolioBarchart() {
   const [ds, setDs] = useState([]);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
   const layout = 'horizontal';
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     fetchPortfolio().then(data => {
-
       if (data) {
         const dataset = data.map(item => createData(item.stock, item.posn_val));
         setDs(dataset);
       }
+      setLastUpdate(new Date());
     });
-  }, []);
 
+  });
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Refresh data every minute
+
+    return () => clearInterval(interval);
+  }, []);
   return (
     <Stack direction="column" spacing={1} sx={{ width: '100%', maxWidth: 600 }}>
       <Stack direction="row" spacing={4}>
@@ -64,7 +72,11 @@ export default function PortfolioBarchart() {
         }}
         borderRadius={10}
       />
-
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Typography variant="caption" display="block" gutterBottom>
+            Last updated: {lastUpdate.toLocaleString()}
+          </Typography>
+      </Box>
     </Stack>
   );
 }

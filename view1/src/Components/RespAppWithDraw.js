@@ -14,24 +14,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
-import MuiDrawer from '@mui/material/Drawer';
-import MuiAppBar from '@mui/material/AppBar';
-import Badge from '@mui/material/Badge';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import { mainListItems, secondaryListItems } from './listItems';
 import Chart from './Chart';
-import Deposits from './Deposits';
 import Orders from './Orders';
-import Pichart from './Pichart';
 import Perfsnap  from "./Perfsnap";
 import Stockuni from "./Stockuni";
-import ChartDuration from "./ChartDuration";
 import PortfolioBarchart from "./PortfolioBarchart";
 
 
@@ -62,7 +52,7 @@ function DrawerAppBar(props) {
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
       <Typography variant="h6" sx={{ my: 2 }}>
-        MUI
+        Tidal
       </Typography>
       <Divider />
       <List>
@@ -88,7 +78,7 @@ function DrawerAppBar(props) {
           <IconButton
             color="inherit"
             aria-label="open drawer"
-            edge="center"
+            edge='end'
             onClick={handleDrawerToggle}
             sx={{ mr: 2, display: { sm: 'none' } }}
           >
@@ -170,7 +160,7 @@ function DrawerAppBar(props) {
                     <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
                       <Grid container spacing={0}>
                         <Grid item xs={4}>
-                            <PortfolioBarchart />
+                          <PortfolioBarchart />
                         </Grid>
                         <Grid item xs={8}>
                           <Orders />

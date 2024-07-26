@@ -35,6 +35,7 @@ export default function Pichart() {
     fetchPortfolio().then(data => {
       const transformedData = transformData(data);
       setDataVals(transformedData);
+      console.log(dataVals);
     });
   }, []);
     return (

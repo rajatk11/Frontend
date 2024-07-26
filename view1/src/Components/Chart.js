@@ -1,4 +1,4 @@
-
+import React, {useState, useEffect, useCallback} from 'react';
 import Stack from '@mui/material/Stack';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
@@ -10,85 +10,123 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
-import React, { useState } from 'react';
+import Typography from "@mui/material/Typography";
+import {fetchPerfHistory, fetchPortfolio} from "./pullData";
+
+// fetchPerfHistory function in `view1/src/components/pullData.js`
 
 
 
-const timestamps = [
-  new Date(2021, 1, 7, 12, 5),
-  new Date(2021, 1, 7, 12, 6),
-  new Date(2021, 1, 7, 12, 7),
-  new Date(2021, 1, 7, 12, 8),
-  new Date(2021, 1, 7, 12, 9),
-  new Date(2021, 1, 7, 12, 10),
-  new Date(2021, 1, 7, 12, 11),
-  new Date(2021, 1, 7, 12, 12),
-  new Date(2021, 1, 7, 12, 13),
-  new Date(2021, 1, 7, 12, 14),
-  new Date(2021, 1, 7, 12, 15),
-  new Date(2021, 1, 7, 12, 16),
-  new Date(2021, 1, 7, 12, 17),
-  new Date(2021, 1, 7, 12, 18),
-  new Date(2021, 1, 7, 12, 19),
-  new Date(2021, 1, 7, 12, 20),
-];
+function calculatePercentageChange(numbers) {
+  if (numbers.length === 0) return [];
 
+  const baseValue = numbers[0];
 
-const indexvals = [
-    .01, .02, .03, .02, .01, -.02, -.03,-.09, -.06, -.05, 0, .02, .03, .06, .05, .08
-];
-const portfoliovals = [
-    .01, .02, .04, .05, .02, .04, .02,.03, .05, .06, .1, .08, .1, .12, .11, .13
-];
+  return numbers.map(number => {
+    const percentageChange = ((number - baseValue) / baseValue) * 100;
+    return Number(percentageChange.toFixed(2));
+  });
+}
 
-const lineChartsParams = {
-  series: [
-    {
-      label: 'Index Performance',
-      data: indexvals,
-      showMark: false,
-    },
-    {
-      label: 'Portfolio Performance',
-      data: portfoliovals,
-      showMark: false,
-    },
-
-  ],
-  width: 1000,
-  height: 220,
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{ backgroundColor: 'white', padding: '5px', border: '1px solid #ccc' }}>
+        <p>{`Time: ${new Date(label).toLocaleString()}`}</p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{ color: entry.color }}>
+            {`${entry.name}: ${entry.value.toFixed(2)}`}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
 };
 
-//const yearFormatter = (date) => date.getFul().toString();
+
+
 export default function Chart() {
   const [selectedRange, setSelectedRange] = useState('day');
+  const [indexData, setIndexData] = useState([]);
+  const [portfolioData, setPortfolioData] = useState([]);
+  const [timestamps, setTimestamps] = useState([]);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+
+  const fetchData = useCallback(() => {
+    fetchPerfHistory('SP500', selectedRange).then(data => {
+      if (data) {
+        const dataset = data.map(item => (item.value));
+        setIndexData(calculatePercentageChange(dataset));
+        const timestampdata = data.map(item => new Date(item.timestamp));
+        setTimestamps(timestampdata);
+      }
+    });
+
+    fetchPerfHistory('portfolio', selectedRange).then(data => {
+      if (data) {
+        const dataset1 = data.map(item => (item.value));
+        setPortfolioData(calculatePercentageChange(dataset1));
+      }
+    });
+    setLastUpdate(new Date());
+  }, [selectedRange]);
+
   const handleRangeChange = (range) => {
-      setSelectedRange(range);
+    setSelectedRange(range);
   };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 20000); // Refresh data every minute
+
+    return () => clearInterval(interval); // Clear interval on component unmount
+  }, [selectedRange, fetchData]);
+
+  const lineChartsParams = {
+    series: [
+      {
+        label: 'Index Performance',
+        data: indexData,
+        showMark: false,
+      },
+      {
+        label: 'Portfolio Performance',
+        data: portfolioData,
+        showMark: false,
+      },
+    ],
+    width: 1000,
+    height: 220,
+  };
+
   const buttons = [
-    <Button key="minute" fullWidth onClick={() => handleRangeChange('minute')}>Minute</Button>,
+    <Button key="min" fullWidth onClick={() => handleRangeChange('min')}>Minute</Button>,
     <Button key="hour" fullWidth onClick={() => handleRangeChange('hour')}>Hour</Button>,
     <Button key="day" fullWidth onClick={() => handleRangeChange('day')}>Day</Button>,
   ];
+
   return (
-      <Grid container spacing={7} alignItems="center">
-        <Grid item xs={10} md={10} lg={10}>
-                <LineChart
-                  {...lineChartsParams}
-                  xAxis={[{ data: timestamps, scaleType: 'time' }]}
-                  series={lineChartsParams.series.map((series) => ({
-                      ...series,
-                  }))}
-                />
-        </Grid>
-        <Grid item xs={2} md={2} lg={2}>
-
-
-            <ButtonGroup orientation="vertical" aria-label="Vertical button group" sx={{ width: '100%' }}>
-              {buttons}
-            </ButtonGroup>
-
-        </Grid>
+    <Grid container spacing={10} alignItems="center">
+      <Grid item xs={10} md={10} lg={10}>
+        <LineChart
+          {...lineChartsParams}
+          xAxis={[{ data: timestamps, scaleType: 'time' }]}
+          series={lineChartsParams.series.map((series) => ({
+            ...series
+          }))}
+        />
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Typography variant="caption" display="block" gutterBottom>
+            Last updated: {lastUpdate.toLocaleString()}
+          </Typography>
+        </Box>
       </Grid>
+      <Grid item xs={2} md={2} lg={2}>
+        <ButtonGroup orientation="vertical" aria-label="Vertical button group" sx={{ width: '100%' }}>
+          {buttons}
+        </ButtonGroup>
+      </Grid>
+    </Grid>
   );
 }
