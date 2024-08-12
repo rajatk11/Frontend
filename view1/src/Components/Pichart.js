@@ -1,20 +1,11 @@
+{/*
+
 import * as React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { useState, useEffect } from 'react';
 import { PieChart, pieArcLabelClasses } from '@mui/x-charts/PieChart';
-import {fetchPortfolio} from "./pullData";
+import {useFetchPortfolio} from "./pullData";
 
-
-/*
-const data_vals = [
-        { id: 0, value: 10, label: 'AAPL' },
-        { id: 1, value: 15, label: 'NVDA' },
-        { id: 2, value: 20, label: 'MSFT' },
-        { id: 3, value: 25, label: 'GOOG' },
-        { id: 4, value: 30, label: 'META' },
-      ];
-
- */
 
 function transformData(apiResponse) {
   return apiResponse.map((item, index) => {
@@ -32,7 +23,7 @@ export default function Pichart() {
   const theme = useTheme();
 
   useEffect(() => {
-    fetchPortfolio().then(data => {
+    useFetchPortfolio().then(data => {
       const transformedData = transformData(data);
       setDataVals(transformedData);
       console.log(dataVals);
@@ -79,3 +70,5 @@ export default function Pichart() {
     );
 
 }
+
+*/}

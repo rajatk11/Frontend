@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
@@ -9,6 +10,8 @@ import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
 import {fetchPortfolio} from "./pullData";
 import Box from "@mui/material/Box";
+import {useAlgoContext} from "./AlgoContext";
+
 
 
 function createData(stock, posn_size) {
@@ -25,9 +28,10 @@ export default function PortfolioBarchart() {
   const [ds, setDs] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const layout = 'horizontal';
+  const { selectedVariable } = useAlgoContext();
 
   const fetchData = useCallback(() => {
-    fetchPortfolio().then(data => {
+    fetchPortfolio(selectedVariable).then(data => {
       if (data) {
         const dataset = data.map(item => createData(item.stock, item.posn_val));
         setDs(dataset);
@@ -41,7 +45,12 @@ export default function PortfolioBarchart() {
     const interval = setInterval(fetchData, 30000); // Refresh data every minute
 
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedVariable]);
+
+  const modifiedDs = ds.map(item => ({
+  ...item,
+  logoUrl: `/assets/stock_logos/${item.stock.png}`
+  }));
   return (
     <Stack direction="column" spacing={1} sx={{ width: '100%', maxWidth: 600 }}>
       <Stack direction="row" spacing={4}>
@@ -53,9 +62,10 @@ export default function PortfolioBarchart() {
       <BarChart
         series={[
           { dataKey: 'high', label: 'Long', layout, stack: 'stack', color: 'green'},
-          { dataKey: 'low', label: 'Short', layout, stack: 'stack', color: 'darkred'},
+          { dataKey: 'low', label: 'Short', layout, stack: 'stack', color: '#c62828',},
         ]}
         dataset={ds}
+
         height={400}
         yAxis={[{ scaleType: 'band', dataKey: 'stock' }]}
         sx={{
@@ -69,9 +79,12 @@ export default function PortfolioBarchart() {
             position: { vertical: 'bottom', horizontal: 'middle' },
             padding: -5,
           },
+
         }}
         borderRadius={10}
       />
+
+
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
           <Typography variant="caption" display="block" gutterBottom>
             Last updated: {lastUpdate.toLocaleString()}
@@ -80,52 +93,3 @@ export default function PortfolioBarchart() {
     </Stack>
   );
 }
-
-/*
-const dataset = [
-  [0, -95000, 'First'],
-  [0, -54500, 'Second'],
-  [10720, 0, 'Third'],
-  [0, 0, 'Fourth'],
-  [90000, 0, 'Fifth'],
-  [0, -46000, 'Sixth'],
-  [0, 0, 'Seventh'],
-  [0, 6, 'Eighth'],
-  [9, 6, 'Ninth'],
-  [9, 6, 'Tenth'],
-  [9, 6, 'Eleventh'],
-  [9, 6, 'Twelfth'],
-  ].map(([high, low, order]) => ({
-  high,
-  low,
-  order,
-}));
-
-
-
-const chartSettingsH = {
-  ds,
-  height: 400,
-  yAxis: [{ scaleType: 'band', dataKey: 'order' }],
-  sx: {
-    [`& .${axisClasses.directionY} .${axisClasses.label}`]: {
-      transform: 'translateX(-10px)',
-    },
-  },
-  slotProps: {
-    legend: {
-      direction: 'row',
-      position: { vertical: 'bottom', horizontal: 'middle' },
-      padding: -5,
-    },
-  },
-};
-const chartSettingsV = {
-  ...chartSettingsH,
-  xAxis: [{ scaleType: 'band', dataKey: 'order' }],
-  yAxis: undefined,
-};
-
-
-
-*/

@@ -1,5 +1,5 @@
 
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useParams} from 'react';
 import Stack from '@mui/material/Stack';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
@@ -20,6 +20,7 @@ import { useAlgoContext} from "./AlgoContext";
 
 
 function calculatePercentageChange(numbers) {
+
   if (numbers.length === 0) return [];
 
   const baseValue = numbers[0];
@@ -48,13 +49,15 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 
 
-export default function Chart() {
+export default function StockChart({stock}) {
   const [selectedRange, setSelectedRange] = useState('day');
   const [indexData, setIndexData] = useState([]);
   const [portfolioData, setPortfolioData] = useState([]);
   const [timestamps, setTimestamps] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const { selectedVariable } = useAlgoContext();
+
+
 
   const fetchData = useCallback(() => {
     fetchPerfHistory(selectedVariable, 'SP500', selectedRange).then(data => {
@@ -66,7 +69,7 @@ export default function Chart() {
       }
     });
 
-    fetchPerfHistory(selectedVariable, 'portfolio', selectedRange).then(data => {
+    fetchPerfHistory(selectedVariable, stock, selectedRange).then(data => {
       if (data) {
         const dataset1 = data.map(item => (item.value));
         setPortfolioData(calculatePercentageChange(dataset1));
@@ -81,9 +84,6 @@ export default function Chart() {
 
   useEffect(() => {
     fetchData();
-    console.log(timestamps)
-    console.log(indexData)
-    console.log(portfolioData)
     const interval = setInterval(fetchData, 20000); // Refresh data every minute
 
     return () => clearInterval(interval); // Clear interval on component unmount
@@ -97,7 +97,7 @@ export default function Chart() {
         showMark: false,
       },
       {
-        label: 'Portfolio Performance',
+        label: 'Algo performance trading ' + stock,
         data: portfolioData,
         showMark: false,
       },
@@ -122,11 +122,7 @@ export default function Chart() {
             ...series
           }))}
         />
-        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <Typography variant="caption" display="block" gutterBottom>
-            Last updated: {lastUpdate.toLocaleString()}
-          </Typography>
-        </Box>
+
       </Grid>
       <Grid item xs={2} md={2} lg={2}>
         <ButtonGroup orientation="vertical" aria-label="Vertical button group" sx={{ width: '100%' }}>

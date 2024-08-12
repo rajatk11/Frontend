@@ -1,8 +1,9 @@
+import {useAlgoContext} from "./AlgoContext";
+import {useEffect, useState} from "react";
 
 
-
-export function fetchPortfolio() {
-  return fetch('/api/Portfolio/')
+export function fetchPortfolio(chartLocation) {
+  return fetch('/api/' + chartLocation + '/Portfolio/')
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -20,8 +21,9 @@ export function fetchPortfolio() {
 
 
 
-export function fetchTradeinf() {
-  return fetch('/api/TradeInf/')
+export function fetchTradeinf(chartLocation) {
+
+  return fetch('/api/' + chartLocation + '/TradeInf/')
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -39,8 +41,9 @@ export function fetchTradeinf() {
 
 
 
-export function fetchStocksummary() {
-  return fetch('/api/StockSummary/')
+export function fetchStocksummary(chartLocation) {
+
+    return fetch('/api/' + chartLocation + '/StockSummary/')
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -59,9 +62,28 @@ export function fetchStocksummary() {
 
 // fetchPerfHistory function in `view1/src/components/pullData.js`
 // fetchPerfHistory function in `view1/src/components/pullData.js`
-export function fetchPerfHistory(stock, duration) {
-  return fetch(`/api/PerfHistory?stock=${stock}&duration=${duration}`)
-    .then(response => {
+
+export async function fetchPerfHistory(chartLocation, stock, duration) {
+  const location = `/api/${chartLocation}/PerfHistory/?stock=${stock}&duration=${duration}`;
+  try {
+    const response = await fetch(location);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    if (!Array.isArray(data)) {
+      throw new Error('Data is not an array');
+    }
+    return data.reverse();
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+/*
+export function fetchPerfHistory(chartLocation, stock, duration) {
+  const location = `/api/${chartLocation}/PerfHistory/?stock=${stock}&duration=${duration}`;
+  return fetch(location).then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -75,3 +97,6 @@ export function fetchPerfHistory(stock, duration) {
     })
     .catch(error => console.error('Error:', error));
 }
+
+
+ */

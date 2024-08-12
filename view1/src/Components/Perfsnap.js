@@ -1,3 +1,4 @@
+// Code to display the performance snapshot of the portfolio
 import * as React from 'react';
 import Card from '@mui/material/Card';
 import Box from '@mui/material/Box';
@@ -8,6 +9,8 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import {useCallback, useState} from "react";
+import {fetchPortfolio} from "./pullData";
+import {useAlgoContext} from "./AlgoContext";
 
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -22,11 +25,22 @@ const Item = styled(Paper)(({ theme }) => ({
 export default function Perfsnap() {
   const [data, setData] = React.useState([]);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const { selectedVariable } = useAlgoContext();
+
+  const formatNumberint = (number) => {
+    const rounded = Math.round(number);
+    return new Intl.NumberFormat('en-US').format(rounded);
+  };
+
+  const formatNumber1dec = (number) => {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(number);
+  };
 
   const fetchData = useCallback(() => {
-    fetch('/api/Portfolio')
-      .then(response => response.json())
-      .then(data => setData(data));
+    fetchPortfolio(selectedVariable).then(data => setData(data));
     setLastUpdate(new Date());
   });
 
@@ -35,13 +49,18 @@ export default function Perfsnap() {
     const interval = setInterval(fetchData, 20000); // Refresh data every minute
 
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedVariable]);
 
-  const totalValue = data.reduce((acc, row) => acc + parseFloat(Math.abs(row.posn_val)) + parseFloat(row.avl_cash), 0);
+  const totalValue = data.reduce((acc, row) => acc + parseFloat(Math.abs(row.posn_val)) + parseFloat(Math.abs(row.avl_cash)), 0);
   const today = data.reduce((acc, row) => acc + parseFloat(row.days_gain_val), 0);
   const positions = data.reduce((acc, row) => acc + parseFloat(row.posn_val), 0);
-  let PortfolioBias = '';
+
+  const formattedtotalValue = formatNumberint(totalValue);
+  const formattedtoday = formatNumber1dec(today);
+  const formattedpositions = formatNumberint(positions);
+  let PortfolioBias = '<Unknown>';
   const totalSum = totalValue + positions;
+
 
   if (totalSum >= 0.95 * totalValue && totalSum <= 1.05 * totalValue) {
     PortfolioBias = 'Neutral';
@@ -51,6 +70,13 @@ export default function Perfsnap() {
     PortfolioBias = 'Short';
   }
 
+  const getColor = (bias) => {
+    if (bias === 'Short') return 'red';
+    if (bias === 'Long') return 'green';
+    return 'grey';
+  };
+
+
   return (
     <Card variant="outlined">
       <Box sx={{ p: 2 }}>
@@ -58,7 +84,9 @@ export default function Perfsnap() {
           <Typography gutterBottom variant="h5" component="div">
             Current portfolio bias
           </Typography>
-          <Typography gutterBottom variant="h6" component="div">
+          <Typography gutterBottom variant="h6" component="div"
+            sx={{ color: getColor(PortfolioBias), fontStyle: 'italic' }}
+          >
             {PortfolioBias}
           </Typography>
         </Stack>
@@ -70,9 +98,9 @@ export default function Perfsnap() {
           divider={<Divider orientation="vertical" flexItem />}
           spacing={2}
         >
-          <Item>Total Value : ${totalValue}</Item>
-          <Item>Today : ${today}</Item>
-          <Item>Positions : ${positions}</Item>
+          <Item>Total Value : ${formattedtotalValue}</Item>
+          <Item>Today : ${formattedtoday}</Item>
+          <Item>Positions : ${formattedpositions}</Item>
         </Stack>
 
       </Box>
@@ -84,3 +112,5 @@ export default function Perfsnap() {
     </Card>
   );
 }
+
+
